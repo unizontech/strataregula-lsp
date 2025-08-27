@@ -8,6 +8,6 @@ for StrataRegula configuration files.
 __version__ = "0.1.0"
 __author__ = "StrataRegula Team"
 
-from .server import StrataRegulaLanguageServer
+from .server import StrataRegulaLanguageServer, main
 
-__all__ = ["StrataRegulaLanguageServer"]
+__all__ = ["StrataRegulaLanguageServer", "main"]
