@@ -12,6 +12,8 @@ from lsprotocol.types import (
     MarkupContent,
     MarkupKind,
 )
+from ..providers.pattern_provider import PatternProvider
+from ..analyzer.pattern_analyzer import PatternAnalyzer
 
 
 class CompletionHandler:
@@ -19,6 +21,8 @@ class CompletionHandler:
     
     def __init__(self, server):
         self.server = server
+        self.analyzer = PatternAnalyzer()
+        self.provider = PatternProvider(self.analyzer)
         self.snippets = self._load_snippets()
     
     def _load_snippets(self) -> List[CompletionItem]:
@@ -89,27 +93,39 @@ class CompletionHandler:
         ]
     
     async def handle(self, params: CompletionParams) -> CompletionList:
-        """Handle completion request."""
-        uri = params.text_document.uri
-        position = params.position
-        
-        # Get document content
-        content = self.server.get_document_content(uri)
-        if not content:
-            return CompletionList(is_incomplete=False, items=[])
-        
-        # Get context at cursor position
-        lines = content.split('\n')
-        if position.line >= len(lines):
-            return CompletionList(is_incomplete=False, items=[])
-        
-        line = lines[position.line]
-        col = position.character
-        
-        # Determine context and filter completions
-        items = self._get_context_completions(line, col)
-        
-        return CompletionList(is_incomplete=False, items=items)
+        """Handle completion request using pattern provider and fallback snippets."""
+        try:
+            uri = params.text_document.uri
+            position = params.position
+            
+            # Get document from server workspace
+            document = self.server.workspace.get_document(uri)
+            if not document:
+                return CompletionList(is_incomplete=False, items=self.snippets)
+            
+            # Try intelligent pattern-based completions first
+            intelligent_completions = self.provider.provideCompletions(document, position)
+            
+            # If we got intelligent completions, use them
+            if intelligent_completions:
+                return CompletionList(is_incomplete=False, items=intelligent_completions)
+            
+            # Fallback to context-based snippets
+            content = document.source if hasattr(document, 'source') else ""
+            lines = content.split('\n')
+            if position.line < len(lines):
+                line = lines[position.line]
+                col = position.character
+                context_items = self._get_context_completions(line, col)
+                return CompletionList(is_incomplete=False, items=context_items)
+            
+            # Final fallback to all snippets
+            return CompletionList(is_incomplete=False, items=self.snippets)
+            
+        except Exception as e:
+            # Log error and return basic completions
+            self.server.show_message_log(f"Completion error: {str(e)}")
+            return CompletionList(is_incomplete=False, items=self.snippets)
     
     def _get_context_completions(self, line: str, col: int) -> List[CompletionItem]:
         """Get completions based on context."""
