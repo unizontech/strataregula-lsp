@@ -110,8 +110,10 @@ class CompletionHandler:
             if intelligent_completions:
                 return CompletionList(is_incomplete=False, items=intelligent_completions)
             
-            # Fallback to context-based snippets
-            content = document.source if hasattr(document, 'source') else ""
+            # Fallback to context-based snippets  
+            content = document.source if hasattr(document, 'source') else (
+                document.text if hasattr(document, 'text') else ""
+            )
             lines = content.split('\n')
             if position.line < len(lines):
                 line = lines[position.line]

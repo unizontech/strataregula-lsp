@@ -4,7 +4,7 @@ Based on IntelliSense_Completion_Flow sequence diagram
 """
 from typing import List, Optional, Dict, Any
 from lsprotocol.types import (
-    CompletionItem, CompletionItemKind, Position, TextDocument,
+    CompletionItem, CompletionItemKind, Position,
     CompletionParams, InsertTextFormat
 )
 from ..analyzer.pattern_analyzer import PatternAnalyzer, PatternContext, LearnedPattern
@@ -23,53 +23,63 @@ class PatternProvider:
         
         # Common StrataRegula patterns
         self.base_patterns = {
-            "services": ["frontend", "backend", "api", "worker", "database", "cache", "queue"],
+            "services": ["frontend", "backend", "api", "worker", "database", "cache", "queue", "proxy", "web"],
             "environments": ["prod", "dev", "test", "staging", "local"],
             "config_types": ["database", "redis", "kafka", "elasticsearch", "monitoring"],
             "wildcard_patterns": ["*", "**", "service.*", "*.prod", "prod.*"]
         }
         
-    def provideCompletions(self, document: TextDocument, position: Position) -> List[CompletionItem]:
+    def provideCompletions(self, document: Any, position: Position) -> List[CompletionItem]:
         """
         Main completion entry point from LSP handler
         Follows the IntelliSense_Completion_Flow sequence
         """
         # Get document text and cursor position
-        text = document.source if hasattr(document, 'source') else ""
+        text = document.source if hasattr(document, 'source') else (
+            document.text if hasattr(document, 'text') else str(document)
+        )
         text_before_cursor = self._get_text_before_cursor(text, position)
         
-        # Check if we're in a value position
-        if not self.tokenizer.isInValuePosition(text_before_cursor):
-            return []
-            
         # Parse pattern context using tokenizer
         context = self.tokenizer.parsePatternContext(text_before_cursor)
         
-        # Query learned patterns database
-        learned_services = self._query_learned_services(context.current_pattern)
+        # Check if we're in a value position
+        is_value_pos = self.tokenizer.isInValuePosition(text_before_cursor)
         
-        # Generate completions based on context
-        completions = self.generateCompletions(context, learned_services)
+        # Always provide completions if we have a pattern context
+        if context.current_pattern or is_value_pos:
+            # Query learned patterns database
+            learned_services = self._query_learned_services(context.current_pattern)
+            
+            # Generate completions based on context
+            completions = self.generateCompletions(context, learned_services)
+            
+            return completions
         
-        return completions
+        # No completions for this context
+        return []
     
     def generateCompletions(self, context: PatternContext, learned_services: List[str]) -> List[CompletionItem]:
         """Generate completion items based on pattern context and depth"""
         completions = []
         
-        # Depth-based completion logic from IntelliSense flow
-        if context.depth == 1:
-            # Services level
+        # Always provide some basic completions
+        if context.depth <= 1:
+            # Services level - provide service completions
             completions.extend(self.createServiceCompletions(context, learned_services))
             completions.extend(self._add_wildcard_options())
             
-        elif context.depth == 2:
+        if context.depth == 2:
             # Config Types level
             completions.extend(self.createConfigTypeCompletions(context))
             
-        else:
+        if context.depth > 2:
             # Advanced completions for deeper nesting
             completions.extend(self.createAdvancedCompletions(context))
+        
+        # If no completions generated, provide basic service patterns
+        if not completions:
+            completions.extend(self.createServiceCompletions(context, []))
             
         return completions
     
@@ -92,7 +102,7 @@ class PatternProvider:
         
         # Add base service patterns
         for service in self.base_patterns["services"]:
-            if service.lower().startswith(current_pattern):
+            if current_pattern == "" or service.lower().startswith(current_pattern):
                 if service not in learned_services:  # Avoid duplicates
                     completions.append(CompletionItem(
                         label=service,
@@ -102,6 +112,18 @@ class PatternProvider:
                         insert_text=service,
                         sort_text=f"1_{service}"  # Lower priority than learned
                     ))
+        
+        # Add environment patterns if they match
+        for env in self.base_patterns["environments"]:
+            if current_pattern == "" or env.lower().startswith(current_pattern):
+                completions.append(CompletionItem(
+                    label=env,
+                    kind=CompletionItemKind.Enum,
+                    detail="Environment name",
+                    documentation=f"Environment: {env}",
+                    insert_text=env,
+                    sort_text=f"2_{env}"  # Lower priority than services
+                ))
         
         return completions
     

@@ -1,0 +1,37 @@
+# StrataRegula Pattern Test File
+service_times:
+  prod.frontend.response: 200
+  prod.backend.timeout: 30  
+  prod.api.retry: 3
+  dev.frontend.response: 500
+  dev.backend.timeout: 60
+
+resource_limits:
+  web.*.cpu: 80
+  web.*.memory: 512
+  api.prod.cpu: 90
+  api.dev.cpu: 70
+
+traffic_routing:
+  frontend.*.route: "/api/v1"
+  backend.*.endpoint: ":8080"
+  proxy.prod.upstream: "prod-server:8080"
+
+environments:
+  production:
+    database:
+      host: "prod-db.example.com"
+      port: 5432
+      ssl: true
+    cache:
+      host: "prod-cache.example.com" 
+      port: 6379
+  
+  development:
+    database:
+      host: "dev-db.example.com"
+      port: 5432
+      ssl: false
+    cache:
+      host: "dev-cache.example.com"
+      port: 6379
