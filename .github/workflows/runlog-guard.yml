@@ -31,7 +31,7 @@ jobs:
           while IFS= read -r f; do
             if [ -f "$f" ]; then
               # Summary 行が存在し、かつ「空でない/placeholderでない」ことを検査
-              if ! grep -qE '^- +Summary: +[^[:space:]].+' "$f"; then
+              if ! grep -qE '^- +\*\*Summary\*\*: +[^[:space:]].+|^## Summary$' "$f"; then
                 echo "::error file=$f,title=Summary is empty::Run Log の Summary が空です。要点を1–3行で記載してください。"
                 bad=1
               fi
