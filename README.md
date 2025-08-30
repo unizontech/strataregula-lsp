@@ -1,3 +1,5 @@
+> **開発者へ**: 作業開始前に必ず [docs/README_FOR_DEVELOPERS.md](docs/README_FOR_DEVELOPERS.md) を確認してください。
+
 # StrataRegula Language Server Protocol (LSP)
 
 Language Server Protocol implementation for StrataRegula YAML configuration pattern compiler.
