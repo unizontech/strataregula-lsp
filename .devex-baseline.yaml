@@ -1,0 +1,8 @@
+version: "2025.09-train"
+components:
+  devcontainer: v1
+  coverage_gate: v1
+  flaky_scan: v1
+  weekly_health: v1
+  cov_bump: v1
+frozen_after: "2025-09-10"  # この日以降はP0以外の基盤変更は積まない

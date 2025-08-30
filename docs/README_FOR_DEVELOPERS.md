@@ -1,5 +1,7 @@
 # 開発前に必ず読む資料
 
+> 🔗 必読: [AGENTS.md](../AGENTS.md) – 自動化手順／Run Log ルール（Summary 非空・JST）
+
 ## 基本ポリシー
 - 1 PR = 1 目的
 - Runログは `docs/run/*.md` に必ず追加（Summary / Intent / Next actions）

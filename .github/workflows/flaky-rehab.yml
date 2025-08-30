@@ -1,0 +1,23 @@
+name: flaky-rehab
+on:
+  schedule: [{ cron: "0 0 * * MON" }]  # 月曜 09:00 JST 相当
+  workflow_dispatch:
+jobs:
+  rehab:
+    runs-on: ubuntu-latest
+    permissions: { contents: write, pull-requests: write }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -U pytest pyyaml || true
+      - run: |
+          python tools/rehab_flaky.py
+          git diff --quiet || (git add tests/flaky_quarantine.yaml && git commit -m "chore(flaky): rehab passed cases")
+      - uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore(flaky): rehab passed cases"
+          title: "chore(flaky): rehab passed cases"
+          body: "Automatically removed tests that passed 10 consecutive runs."
+          branch: "chore/flaky-rehab"
+          delete-branch: true

@@ -1,6 +1,13 @@
+> 👋 新しく参加した方はまず [docs/ONBOARDING.md](docs/ONBOARDING.md) をご覧ください。
+
 > **開発者へ**: 作業開始前に必ず [docs/README_FOR_DEVELOPERS.md](docs/README_FOR_DEVELOPERS.md) を確認してください。
 
 # StrataRegula Language Server Protocol (LSP)
+
+[![CI](https://img.shields.io/badge/CI-github--actions-blue)](#)
+[![RunLog Guard](https://img.shields.io/badge/RunLog-guard-green)](#)
+[![Docs LinkCheck](https://img.shields.io/badge/Docs-linkcheck-green)](#)
+[![PR Size Guard](https://img.shields.io/badge/PR--Size-guard-orange)](#)
 
 Language Server Protocol implementation for StrataRegula YAML configuration pattern compiler.
 
