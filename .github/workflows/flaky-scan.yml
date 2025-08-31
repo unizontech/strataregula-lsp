@@ -1,0 +1,25 @@
+name: flaky-scan
+on:
+  schedule: [{ cron: "0 0 * * MON" }]  # 月曜09:00 JST 相当（UTC基準で調整可）
+  workflow_dispatch:
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions: { contents: write, pull-requests: write }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -U pytest || true
+      - name: Scan 3 runs & write report
+        env: { FLAKY_RUNS: "3" }
+        run: |
+          python tools/flaky_scan.py
+      - name: Create PR with report
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore(flaky): weekly flaky tests report"
+          title: "chore(flaky): weekly flaky tests report"
+          body: "Auto-generated flaky tests summary (3 runs)."
+          branch: "chore/flaky-weekly"
+          delete-branch: true

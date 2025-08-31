@@ -1,0 +1,9 @@
+# Code ownership for clear accountability
+# TODO: Create proper GitHub teams and update to @strataregula/team-name
+/strataregula_lsp/         @unizontech
+/tests/                    @unizontech
+/.devcontainer/            @unizontech
+/docs/                     @unizontech
+/.github/                  @unizontech
+/AGENTS.md                 @unizontech
+/CONTRIBUTING.md           @unizontech

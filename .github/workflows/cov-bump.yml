@@ -1,0 +1,25 @@
+name: cov-bump
+on:
+  schedule: [{ cron: "0 0 10 * *" }]  # 毎月10日 09:00JST 相当（UTC基準で調整可）
+  workflow_dispatch:
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    permissions: { contents: write, pull-requests: write }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Install pytest (best effort)
+        run: pip install -U pytest pytest-cov || true
+      - name: Try bump +5pt if head passes
+        run: |
+          python tools/bump_coverage_fail_under.py || true
+      - name: Create PR
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "ci(coverage): bump fail-under +5 if head passes"
+          title: "ci(coverage): bump fail-under +5"
+          body: "Auto bump if head coverage ≥ new threshold."
+          branch: "ci/cov-bump"
+          delete-branch: true
